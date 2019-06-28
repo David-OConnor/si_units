@@ -1,0 +1,15 @@
+# Standard ignores. They don't affect code usability.
+build/
+dist/
+venv/
+__pycache__/
+*~
+Thumbs.db
+*.egg-info/
+.pyirc
+.ipynb_checkpoints/
+
+# PyCharm
+*.iws
+workspace.xml
+
