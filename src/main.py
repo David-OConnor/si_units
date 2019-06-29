@@ -1,19 +1,10 @@
+import copy
 from dataclasses import dataclass
 # from enum import Enum
 import operator
 from typing import Callable, Dict, List, Tuple, Union
 
 # import base_units
-
-# class Quantity(Enum):
-#     FORCE = 1
-#     PRESSURE = 2
-#     ENERGY = 3
-
-#     def __str__(self):
-#         return 'my custom str! {0}'.format(self.value)
-
-
 
 
 @dataclass
@@ -24,32 +15,6 @@ class BaseUnit:
     # todo enum?
     quantity: str  # lowercase. eg "mass"
 
-    # todo: Dry with this method in DerivedUnit
-    # def _mul_helper(self, other: Union['BaseUnit', 'DerivedUnit'], 
-    #     op: Callable, symbol: str) -> 'DerivedUnit':
-    #     """Avoids repetition between __mul__ and __truediv__"""
-    #     unit_map = {self: 1}
-
-    #     if type(other) == BaseUnit:
-    #         if other in unit_map.keys():
-    #             unit_map[other] = op(unit_map[other], 1)
-    #         else:
-    #             unit_map[other] = 1
-    #     else:
-    #         for u in other.base_units:
-    #             if u.unit in unit_map.keys():
-    #                 unit_map[u.unit] = op(unit_map[u.unit], u.power)
-    #             else:
-    #                 unit_map[u.unit] = u.power
-
-    #     base_units = [Assoc(k, v) for k, v in unit_map.items()]
-    #     return DerivedUnit(
-    #         f"{self.name} + {other.name}", 
-    #         f"{self.abbrev} {symbol} {other.abbrev}", 
-    #         base_units, 
-    #         f"{self.quantity} {symbol} {other.quantity}"
-    #     )
-
     def __mul__(self, other: Union['BaseUnit', 'DerivedUnit']) -> 'DerivedUnit':
         # return self._mul_helper(other, operator.add, "·")
         return _mul_helper(self, other, {self: 1}, operator.add, "·")
@@ -58,16 +23,8 @@ class BaseUnit:
         # return self._mul_helper(other, operator.sub, "/")
         return _mul_helper(self, other, {self: 1}, operator.sub, "/")
 
-    # todo DRY with __pow__ in DerivedUnit
     def __pow__(self, power: int) -> 'DerivedUnit':
-        result = self
-        if power > 0:
-            for _ in range(power - 1):
-                result = result * self
-        else:
-            for _ in range(abs(power)):
-                result = result / self
-        return result
+        return _pow(self, power)
 
     def __eq__(self, other: 'BaseUnit') -> bool:
         return other and self.id == other.id
@@ -101,11 +58,7 @@ class DerivedUnit:
 
     def rename(self, name: str, abbrev: str, quantity: str) -> 'DerivedUnit':
         """Useful for creating custom units composed of other units."""
-        self.name = name
-        self.abbrev = abbrev
-        self.quantity = quantity
-
-        return self
+        return DerivedUnit(name, abbrev, [(u.unit, u.power) for u in self.base_units], quantity)
 
     def __init__(
         self, 
@@ -124,35 +77,6 @@ class DerivedUnit:
 
         self.quantity = quantity
 
-    # def id(self) -> str:
-    #     """A unique id, generated only from base units."""
-    #     pass
-
-    # def _mul_helper(self, other: Union[BaseUnit, 'DerivedUnit'], 
-    #         op: Callable, symbol: str) -> 'DerivedUnit':
-    #     """Avoids repetition between __mul__ and __div__"""
-    #     unit_map = _to_unit_map(self.base_units)
-
-    #     if type(other) == BaseUnit:
-    #         if other in unit_map.keys():
-    #             unit_map[other] = op(unit_map[other], 1)
-    #         else:
-    #             unit_map[other] = 1
-    #     else:
-    #         for u in other.base_units:
-    #             if u.unit in unit_map.keys():
-    #                 unit_map[u.unit] = op(unit_map[u.unit], u.power)
-    #             else:
-    #                 unit_map[u.unit] = u.power
-
-    #     base_units = [Assoc(k, v) for k, v in unit_map.items()]
-    #     return DerivedUnit(
-    #         f"{self.name} + {other.name}", 
-    #         f"{self.abbrev} {symbol} {other.abbrev}", 
-    #         base_units, 
-    #         f"{self.quantity} {symbol} {other.quantity}"
-    #     )
-    
     def __mul__(self, other: Union[BaseUnit, 'DerivedUnit']) -> 'DerivedUnit':
         return _mul_helper(self, other, _to_unit_map(self.base_units), operator.add, "·")
 
@@ -162,14 +86,7 @@ class DerivedUnit:
     # todo inplace mul and div.
 
     def __pow__(self, power: int) -> 'DerivedUnit':
-        result = self
-        if power > 0:
-            for _ in range(power - 1):
-                result = result * self
-        else:
-            for _ in range(abs(power)):
-                result = result / self
-        return result
+        return _pow(self, power)
 
     def __eq__(self, other: 'DerivedUnit') -> bool:
         return _to_unit_map(self.base_units) == _to_unit_map(other.base_units)
@@ -201,7 +118,7 @@ def _to_unit_map(units: List[Assoc]) -> Dict[BaseUnit, int]:
             result[u.unit] += 1
         else:
             result[u.unit] = u.power
-    return result
+    return {k_: v_ for k_, v_ in result.items() if v_ != 0}
 
 
 def _base_description(units: List[Assoc]) -> str:
@@ -215,7 +132,7 @@ def _base_description(units: List[Assoc]) -> str:
 def _handle_description(units: List[Union[BaseUnit, DerivedUnit]]) -> Tuple[str, str, str]:
     """This allows us to reconstruct using derived units, instead of just
     base ones."""
-
+    # todo
 
     return
 
@@ -234,7 +151,7 @@ def _mul_helper(
         if other in unit_map.keys():
             unit_map[other] = op(unit_map[other], 1)
         else:
-            unit_map[other] = 1
+            unit_map[other] = -1 if symbol == "/" else 1
     else:
         for u in other.base_units:
             if u.unit in unit_map.keys():
@@ -256,6 +173,19 @@ def _mul_helper(
     )
 
 
+def _pow(unit: Union[BaseUnit, DerivedUnit], power: int) -> DerivedUnit:
+    """Helper to avoid repeated code in BaseUnit and DerivedUnit."""
+    result = DerivedUnit("1", "", [], "identity")
+
+    if power > 0:
+        for _ in range(power):
+            result = result * unit
+    else:
+        for _ in range(abs(power)):
+            result = result / unit
+    return result
+
+
 def _power_text(power: int) -> str:
     chars = {
         "-": "⁻",
@@ -272,18 +202,18 @@ def _power_text(power: int) -> str:
     }
 
     result = "".join(chars[char] for char in str(power))
-
     # Ommit first power
     new_result = ""  # Don't modify result in place
     for i, char in enumerate(result):
         if char == "¹":
-            if i == 0 or result[i-1] == "⁻":
+            if i == 0 or result[i-1] != "⁻":
                 continue
         new_result += char
 
-
     return new_result
 
+
+I = DerivedUnit("𝟙", "", [], "𝟙")
 
 # http://www.ebyte.it/library/educards/siunits/TablesOfSiUnitsAndPrefixes.html
 
@@ -296,11 +226,13 @@ mol = BaseUnit(4, "mole", "mol", "quantity of substance")
 cd = BaseUnit(5, "candela", "cd", "luminosity")
 m = BaseUnit(6, "meter", "m", "distance")
 
-# Unitless
-rad = BaseUnit(7, "radian", "rad", "")  # todo count this?
-
 # Derived
-# hz = DerivedUnit("hertz", "Hz", [(s, -1)], "frequency")
+
+# Unitless  # todo special handling?
+rad = I.rename("radian", "rad", "plane angle")
+sr = I.rename("steradian", "sr", "solid angle")
+hz = (I / s).rename("hertz", "Hz", "frequency")
+
 
 n = (kg * m / s).rename("newton", "N", "force")
 pa = (n / m**2).rename("pascal", "Pa", "pressure")
@@ -318,8 +250,8 @@ h = (v * s / a).rename("henry", "H", "inductance")
 wb = (j / a).rename("weber", "Wb", "magnetic flux")
 t = (wb / m**2).rename("tesla", "T", "magnetic flux density")
 
-# lm = (cd * sr).rename("lumen", "lm", "luminous flux")
-# lx = (lm / m**2).rename("lux", "lx", "illuminance")
+lm = (cd * sr).rename("lumen", "lm", "luminous flux")
+lx = (lm / m**2).rename("lux", "lx", "illuminance")
 dipotry = (m**-2).rename("dioptry", "dioptry", "convergence")
 bq = (s**-1).rename("becquerel", "Bq", "activity")
 gy = (j / kg).rename("gray", "Gy", "absorbed dose")

@@ -1,7 +1,7 @@
 # For use with [pytest](https://docs.pytest.org/)
 
-from .main import *
+from . import main
 
 
-def test_mult_a():
-    a = DerivedUnit("Custom", "c", )
+# def test_compose_a():
+    pass
