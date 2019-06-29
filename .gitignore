@@ -8,6 +8,7 @@ Thumbs.db
 *.egg-info/
 .pyirc
 .ipynb_checkpoints/
+*/.mypy_cache/
 
 # PyCharm
 *.iws

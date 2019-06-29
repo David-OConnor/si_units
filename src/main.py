@@ -1,4 +1,4 @@
-import copy
+from collections import defaultdict
 from dataclasses import dataclass
 # from enum import Enum
 import operator
@@ -10,30 +10,43 @@ from typing import Callable, Dict, List, Tuple, Union
 @dataclass
 class BaseUnit:
     id: int  # Must be unique.
-    name: str  # lowercase.  eg "kilogram"
+    _name: str  # lowercase.  eg "kilogram"
     abbrev: str  # caps sensitive. eg "kg"
-    # todo enum?
     quantity: str  # lowercase. eg "mass"
 
+    def name(self):  # For compatibility with DerivedUnit
+        return self._name
+
+    def _text_eq(self, other: Union['BaseUnit', 'DerivedUnit']) -> bool:
+        """For testing"""
+        return self.name == other.name and self.abbrev == other.abbrev and \
+            self.quantity == other.quantity
+
     def __mul__(self, other: Union['BaseUnit', 'DerivedUnit']) -> 'DerivedUnit':
-        # return self._mul_helper(other, operator.add, "·")
         return _mul_helper(self, other, {self: 1}, operator.add, "·")
 
     def __truediv__(self, other: Union['BaseUnit', 'DerivedUnit']) -> 'DerivedUnit':
-        # return self._mul_helper(other, operator.sub, "/")
         return _mul_helper(self, other, {self: 1}, operator.sub, "/")
 
     def __pow__(self, power: int) -> 'DerivedUnit':
         return _pow(self, power)
 
-    def __eq__(self, other: 'BaseUnit') -> bool:
-        return other and self.id == other.id
+    def __eq__(self, other: Union['BaseUnit', 'DerivedUnit']) -> bool:
+        if not other:
+            return False
+        if type(other) == BaseUnit:
+            return self.id == other.id
+        elif type(other) == DerivedUnit:
+            return other.base_units == [Assoc(self, 1)]
+        else:
+            raise NotImplemented("Can only compare BaseUnit to another "
+                                 "BaseUnit, or DerivedUnit")
 
     def __hash__(self):
         return hash((self.id,))
 
     def __repr__(self):
-        return f"{self.name}({self.abbrev}) - {self.quantity}"
+        return f"{self._name} ({self.abbrev}), {self.quantity}"
 
     
 @dataclass
@@ -41,6 +54,7 @@ class Assoc:
     """
     Associates a base unit, and its power
     """
+    # todo: Currently, this wrapper doesn't do anything. Consider removing.
     unit: BaseUnit
     power: int
 
@@ -51,25 +65,42 @@ class Assoc:
 @dataclass
 class DerivedUnit:
     # See comments on fields of same name in BaseUnit.
-    name: str
+    _name_tokens: List[Tuple[str, int]]  # name, power
     abbrev: str
     base_units: List[Assoc]
-    quantity: str  # lowercase. eg "mass"
+    quantity: str  # todo infer this?
+
+    def name(self) -> str:
+        """This method keeps the units used in constructing it,
+        rather than decompose into base units."""
+        result_map = defaultdict(int)
+        for name_, power in self._name_tokens:
+            result_map[name_] += power
+        return "·".join(k_ + _power_text(v_) for k_, v_ in result_map.items())
+
+    def name_base(self) -> str:
+        """This method decomposes into base units."""
+        pass
 
     def rename(self, name: str, abbrev: str, quantity: str) -> 'DerivedUnit':
         """Useful for creating custom units composed of other units."""
         return DerivedUnit(name, abbrev, [(u.unit, u.power) for u in self.base_units], quantity)
 
+    def _text_eq(self, other: Union['BaseUnit', 'DerivedUnit']) -> bool:
+        """For testing"""
+        return self.name() == other.name() and self.abbrev == other.abbrev and \
+            self.quantity == other.quantity
+
     def __init__(
         self, 
-        name: str, 
+        name: str,
         abbrev: str, 
         base_units: List[Tuple[BaseUnit, int]],
         quantity: str
     ) -> 'DerivedUnit':
 
         """This method exists to consolidate base units, if there are duplicates."""
-        self.name = name
+        self._name_tokens = [(name, 1)]
         self.abbrev = abbrev
 
         base_units2 = [Assoc(b[0], b[1]) for b in base_units]
@@ -89,25 +120,12 @@ class DerivedUnit:
         return _pow(self, power)
 
     def __eq__(self, other: 'DerivedUnit') -> bool:
+        """Note that this only tests units."""
         return _to_unit_map(self.base_units) == _to_unit_map(other.base_units)
 
     def __repr__(self):
-        return f"{self.name}({self.abbrev}), {self.base_units} - {self.quantity}"
-
-
-def compose(units: List[Tuple]) -> List[Assoc]:
-    """
-    Combine assitions from units
-    """
-    for unit, power in units:
-        if type(unit) == BaseUnit:
-            pass
-        elif type(unit) == DerivedUnit:
-            pass
-        elif type(unit) == Assoc:
-            pass
-        else:
-            raise TypeError("Incorrect type passed to compose")
+        return f"{self.name()} ({self.abbrev}), {self.base_units}, {self.quantity}"
+        # return f"{self.name()} ({self.abbrev}), {self.quantity}"
 
 
 def _to_unit_map(units: List[Assoc]) -> Dict[BaseUnit, int]:
@@ -122,8 +140,7 @@ def _to_unit_map(units: List[Assoc]) -> Dict[BaseUnit, int]:
 
 
 def _base_description(units: List[Assoc]) -> str:
-    """This allows us to reconstruct using derived units, instead of just
-    base ones."""
+    """This reconstructs the description from base units."""
     unit_map = _to_unit_map(units)
     # todo: Sort by power, high to low?
     return "·".join(unit.abbrev + _power_text(power) for unit, power in unit_map.items())
@@ -157,25 +174,40 @@ def _mul_helper(
             if u.unit in unit_map.keys():
                 unit_map[u.unit] = op(unit_map[u.unit], u.power)
             else:
-                unit_map[u.unit] = u.power
+                unit_map[u.unit] = -u.power if symbol == "/" else u.power
 
-    # if sum(unit_map.values()) == 0:
-    #     return 1
+    if len([u for u in unit_map.values() if u != 0]) == 0:
+        return I
 
     base_units = [(k_, v_) for k_, v_ in unit_map.items()]
     base_units2 = [Assoc(k_, v_) for k_, v_ in unit_map.items()]
-    return DerivedUnit(
-        f"{self.name} {symbol} {other.name}",
-        # f"{self.abbrev} {symbol} {other.abbrev}",
+
+    result = DerivedUnit(
+        "",
         _base_description(base_units2),
         base_units,
         f"{self.quantity} {symbol} {other.quantity}"
     )
 
+    # The constructor takes name as a string, so modify the field directly
+    # to add the tokens
+
+    if type(self) == BaseUnit:
+        self_tokens = [(self._name, 1)]
+    else:
+        self_tokens = self._name_tokens
+    if type(other) == BaseUnit:
+        other_tokens = [(other._name, 1)]
+    else:
+        other_tokens = other._name_tokens
+
+    result._name_tokens = self_tokens + other_tokens
+    return result
+
 
 def _pow(unit: Union[BaseUnit, DerivedUnit], power: int) -> DerivedUnit:
     """Helper to avoid repeated code in BaseUnit and DerivedUnit."""
-    result = DerivedUnit("1", "", [], "identity")
+    result = DerivedUnit("𝟙", "", [], "𝟙")
 
     if power > 0:
         for _ in range(power):
@@ -233,13 +265,13 @@ rad = I.rename("radian", "rad", "plane angle")
 sr = I.rename("steradian", "sr", "solid angle")
 hz = (I / s).rename("hertz", "Hz", "frequency")
 
-
-n = (kg * m / s).rename("newton", "N", "force")
+n = (kg * m * s**-2).rename("newton", "N", "force")
 pa = (n / m**2).rename("pascal", "Pa", "pressure")
 j = (n * m).rename("joule", "J", "energy")
-w = (j / s).rename("watt", "W", "power")
+w = (kg * m**2 * s**-3).rename("watt", "W", "power")
 
-# # Celsius ?
+# celsius = k.rename("celsius", "°C", "temperature")  # todo distinguish from kelvin?
+celsius = DerivedUnit("celsius", "°C", [(k, 1)], "temperature")  # todo distinguish from kelvin?
 
 c = (a * s).rename("coulomb", "C", "charge")
 v = (w * s).rename("volt", "V", "potential")
@@ -258,3 +290,7 @@ gy = (j / kg).rename("gray", "Gy", "absorbed dose")
 sv = (j / kg).rename("sievert", "Sv", "dose equivalent")
 
 kat = (mol / s).rename("katal", "kat", "katalytic acitivty")
+
+# For use in identifying when units match a standard derived unit.
+derived_units = [rad, sr, hz, celsius, c, v, ohm, siem, f, h, wb, t, lm, lx,
+                 dipotry, bq, gy, sv, kat]
