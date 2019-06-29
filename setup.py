@@ -4,10 +4,8 @@ with open('README.rst') as f:
     readme = f.read()
 
 setuptools.setup(
-    name="sci units",
+    name="siunits",
     version="0.0.1",
-    
-    # install_requires=['colorama'],
 
     author="David O'Connor",
     author_email="david.alan.oconnor@gmail.com",
@@ -17,6 +15,7 @@ setuptools.setup(
     license="MIT",
     keywords="SI, units",
     packages=setuptools.find_packages(),
+    python_requires=">=3.7",
     classifiers=[
         "Programming Language :: Python :: 3 :: Only",
         "License :: OSI Approved :: MIT License",
