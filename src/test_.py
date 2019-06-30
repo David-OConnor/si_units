@@ -57,8 +57,8 @@ def test_div_base():
 def test_div_derived():
     assert main.ohm / main.f == main.DerivedUnit(
         "ohm / farad",
-        "kg²·m⁴·s⁻⁵·A⁻²",
-        [(main.kg, 2), (main.m, 4), (main.s, -5), (main.a, -2)],
+        "kg²·m⁴·s⁻⁷·A⁻⁴",
+        [(main.kg, 2), (main.m, 4), (main.s, -7), (main.a, -4)],
         "resistance / capacitance"
     )
 
@@ -68,10 +68,10 @@ def test_div_derived_base():
 
 
 def test_div_base_derived():
-    assert main.a / main.v == main.DerivedUnit(
+    assert main.v / main.a == main.DerivedUnit(
         "volt / ampere",
-        "kg·m²·s⁻²·A⁻¹",
-        [(main.kg, -1), (main.m, -2), (main.s, 2), (main.a, 1)],
+        "kg·m²·s⁻³·A⁻²",
+        [(main.kg, 1), (main.m, 2), (main.s, -3), (main.a, -2)],
         "potential / current"
     )
 
@@ -82,9 +82,23 @@ def test_eq_base_derived():
 
 def test_equality():
     assert main.kg * (main.m / main.s)**2 == main.j
-    # assert main.v * main.a == main.w  # todo: SOmething fishy here...
+    assert main.v * main.a == main.w
     assert main.a * main.ohm == main.v
 
 
-def test_mul_base_derived():
-    pass
+def test_composite_base():
+    assert (main.kg * 2) * (3 * main.s) == main.Composite(6, main.kg * main.s)
+
+
+def test_composite_derived():
+    assert (main.v * 2) * (3 * main.j) == main.Composite(
+        3.6, main.kg**2 * main.m**4 * main.s**-5 / main.a
+    )
+
+
+def test_composite_derived_base():
+    assert (main.v * -4) * (2.0 * main.a) == main.Composite(
+        -8., main.kg * main.m**2 * main.s**-3
+    )
+
+

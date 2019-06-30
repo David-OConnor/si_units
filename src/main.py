@@ -22,10 +22,16 @@ class BaseUnit:
         return self.name == other.name and self.abbrev == other.abbrev and \
             self.quantity == other.quantity
 
-    def __mul__(self, other: Union['BaseUnit', 'DerivedUnit']) -> 'DerivedUnit':
+    def __mul__(self, other: Union['BaseUnit', 'DerivedUnit', int, float]) -> Union['DerivedUnit', 'Composite']:
         return _mul_helper(self, other, {self: 1}, operator.add, "·")
 
-    def __truediv__(self, other: Union['BaseUnit', 'DerivedUnit']) -> 'DerivedUnit':
+    __rmul__ = __mul__
+
+    # def __rmul__(self, other: Union['BaseUnit', 'DerivedUnit']) -> 'DerivedUnit':
+    #     return _mul_helper(self, other, {self: 1}, operator.add, "·")
+
+    def __truediv__(self, other: Union['BaseUnit', 'DerivedUnit', int, float]) \
+            -> Union['DerivedUnit', 'Composite']:
         return _mul_helper(self, other, {self: 1}, operator.sub, "/")
 
     def __pow__(self, power: int) -> 'DerivedUnit':
@@ -108,10 +114,12 @@ class DerivedUnit:
 
         self.quantity = quantity
 
-    def __mul__(self, other: Union[BaseUnit, 'DerivedUnit']) -> 'DerivedUnit':
+    def __mul__(self, other: Union[BaseUnit, 'DerivedUnit', int, float]) -> Union['DerivedUnit', 'Composite']:
         return _mul_helper(self, other, _to_unit_map(self.base_units), operator.add, "·")
 
-    def __truediv__(self, other: Union[BaseUnit, 'DerivedUnit']) -> 'DerivedUnit':
+    __rmul__ = __mul__
+
+    def __truediv__(self, other: Union[BaseUnit, 'DerivedUnit', int, float]) -> Union['DerivedUnit', 'Composite']:
         return _mul_helper(self, other, _to_unit_map(self.base_units), operator.sub, "/")
 
     # todo inplace mul and div.
@@ -155,8 +163,8 @@ def _handle_description(units: List[Union[BaseUnit, DerivedUnit]]) -> Tuple[str,
 
 
 def _mul_helper(
-    self: Union['BaseUnit', 'DerivedUnit'],
-    other: Union['BaseUnit', 'DerivedUnit'],
+    self: Union['BaseUnit', 'DerivedUnit', int, float],
+    other: Union['BaseUnit', 'DerivedUnit', int, float],
     init_map: Dict[Union['BaseUnit', 'DerivedUnit'], int], 
     op: Callable, 
     symbol: str
@@ -169,12 +177,23 @@ def _mul_helper(
             unit_map[other] = op(unit_map[other], 1)
         else:
             unit_map[other] = -1 if symbol == "/" else 1
-    else:
+
+    elif type(other) == DerivedUnit:
         for u in other.base_units:
             if u.unit in unit_map.keys():
                 unit_map[u.unit] = op(unit_map[u.unit], u.power)
             else:
                 unit_map[u.unit] = -u.power if symbol == "/" else u.power
+
+    elif type(other) == Composite:
+        # Let composite's mult function handle this - other must be first here.
+        return other * self
+
+    elif type(other) == int or type(other) == float:
+        return Composite(other, self)
+
+    else:
+        raise TypeError("Must multiply by BaseUnit, DerivedUnit, or a number")
 
     if len([u for u in unit_map.values() if u != 0]) == 0:
         return I
@@ -193,16 +212,37 @@ def _mul_helper(
     # to add the tokens
 
     if type(self) == BaseUnit:
-        self_tokens = [(self._name, 1)]
+        self_tokens = [(self._name, -1 if symbol == "/" else 1)]
     else:
         self_tokens = self._name_tokens
     if type(other) == BaseUnit:
-        other_tokens = [(other._name, 1)]
+        other_tokens = [(other._name, -1 if symbol == "/" else 1)]
     else:
         other_tokens = other._name_tokens
 
     result._name_tokens = self_tokens + other_tokens
     return result
+
+
+@dataclass
+class Composite:
+    coef: Union[float, int]
+    unit: Union[BaseUnit, DerivedUnit]
+
+    def __mul__(self, other: Union[BaseUnit, DerivedUnit, int, float]) -> 'Composite':
+        if type(other) == BaseUnit or type(other) == DerivedUnit:
+            return Composite(self.coef, self.unit * other)
+        elif type(other) == Composite:
+            return Composite(self.coef * other.coef, self.unit * other.unit)
+        elif type(other) == int or type(other) == float:
+            return Composite(self.coef * other, self.unit)
+        else:
+            raise TypeError("Multiplication must be by a unit or number")
+
+    __rmul__ = __mul__
+
+    def __repr__(self):
+        return f"{self.coef}{self.unit.abbrev}"
 
 
 def _pow(unit: Union[BaseUnit, DerivedUnit], power: int) -> DerivedUnit:
@@ -274,7 +314,7 @@ w = (kg * m**2 * s**-3).rename("watt", "W", "power")
 celsius = DerivedUnit("celsius", "°C", [(k, 1)], "temperature")  # todo distinguish from kelvin?
 
 c = (a * s).rename("coulomb", "C", "charge")
-v = (w * s).rename("volt", "V", "potential")
+v = (w / a).rename("volt", "V", "potential")
 ohm = (v / a).rename("ohm", "Ω", "resistance")
 siem = (a / v).rename("siemens", "S", "conductance")
 f = (c / v).rename("farad", "F", "capacitance")
