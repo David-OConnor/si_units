@@ -7,7 +7,7 @@ with open('README.md') as fh:
 
 setuptools.setup(
     name="siunits",
-    version="0.0.3",
+    version="0.0.4",
     author="David O'Connor",
     author_email="david.alan.oconnor@gmail.com",
     description="Perform operations on SI units",
