@@ -27,9 +27,6 @@ class BaseUnit:
 
     __rmul__ = __mul__
 
-    # def __rmul__(self, other: Union['BaseUnit', 'DerivedUnit']) -> 'DerivedUnit':
-    #     return _mul_helper(self, other, {self: 1}, operator.add, "·")
-
     def __truediv__(self, other: Union['BaseUnit', 'DerivedUnit', int, float]) \
             -> Union['DerivedUnit', 'Composite']:
         return _mul_helper(self, other, {self: 1}, operator.sub, "/")
@@ -52,7 +49,8 @@ class BaseUnit:
         return hash((self.id,))
 
     def __repr__(self):
-        return f"{self._name} ({self.abbrev}), {self.quantity}"
+        # return f"{self._name} ({self.abbrev}), {self.quantity}"
+        return f"{self._name} ({self.abbrev})"
 
     
 @dataclass
@@ -122,6 +120,10 @@ class DerivedUnit:
     def __truediv__(self, other: Union[BaseUnit, 'DerivedUnit', int, float]) -> Union['DerivedUnit', 'Composite']:
         return _mul_helper(self, other, _to_unit_map(self.base_units), operator.sub, "/")
 
+    # todo rexamine this.
+    def __rtruediv__(self, other: Union[BaseUnit, 'DerivedUnit', int, float]) -> Union['DerivedUnit', 'Composite']:
+        return _mul_helper(self, other**-1, _to_unit_map(self.base_units), operator.add, "/")
+
     # todo inplace mul and div.
 
     def __pow__(self, power: int) -> 'DerivedUnit':
@@ -132,8 +134,7 @@ class DerivedUnit:
         return _to_unit_map(self.base_units) == _to_unit_map(other.base_units)
 
     def __repr__(self):
-        return f"{self.name()} ({self.abbrev}), {self.base_units}, {self.quantity}"
-        # return f"{self.name()} ({self.abbrev}), {self.quantity}"
+        return f"{self.name()} ({self.abbrev}), {self.base_units}"
 
 
 def _to_unit_map(units: List[Assoc]) -> Dict[BaseUnit, int]:
@@ -162,13 +163,50 @@ def _handle_description(units: List[Union[BaseUnit, DerivedUnit]]) -> Tuple[str,
     return
 
 
+@dataclass
+class Composite:
+    coef: Union[float, int]
+    unit: Union[BaseUnit, DerivedUnit]
+
+    def __mul__(self, other: Union[BaseUnit, DerivedUnit, int, float]) -> 'Composite':
+        if type(other) == BaseUnit or type(other) == DerivedUnit:
+            return Composite(self.coef, self.unit * other)
+        elif type(other) == Composite:
+            return Composite(self.coef * other.coef, self.unit * other.unit)
+        elif type(other) == int or type(other) == float:
+            return Composite(self.coef * other, self.unit)
+        else:
+            raise TypeError("Multiplication must be by a unit or number")
+
+    __rmul__ = __mul__
+
+    def __truediv__(self, other):
+        if type(other) == BaseUnit or type(other) == DerivedUnit:
+            return Composite(self.coef, self.unit / other)
+        elif type(other) == Composite:
+            return Composite(self.coef / other.coef, self.unit / other.unit)
+        elif type(other) == int or type(other) == float:
+            return Composite(self.coef / other, self.unit)
+        else:
+            raise TypeError("Multiplication must be by a unit or number")
+
+    def __rtruediv__(self, other):
+        pass
+
+    def __pow__(self, power: int):
+        return _pow(self, power)
+
+    def __repr__(self):
+        return f"{self.coef}{self.unit.abbrev}"
+
+
 def _mul_helper(
     self: Union['BaseUnit', 'DerivedUnit', int, float],
     other: Union['BaseUnit', 'DerivedUnit', int, float],
-    init_map: Dict[Union['BaseUnit', 'DerivedUnit'], int], 
-    op: Callable, 
+    init_map: Dict[Union['BaseUnit', 'DerivedUnit'], int],
+    op: Callable,
     symbol: str
-) -> 'DerivedUnit':
+) -> [Composite, DerivedUnit]:
     """Avoids repetition between __mul__ and __truediv__"""
     unit_map = init_map
 
@@ -190,13 +228,13 @@ def _mul_helper(
         return other * self
 
     elif type(other) == int or type(other) == float:
-        return Composite(other, self)
+        return Composite(1 / other, self) if symbol == "/" else Composite(other, self)
 
     else:
         raise TypeError("Must multiply by BaseUnit, DerivedUnit, or a number")
 
     if len([u for u in unit_map.values() if u != 0]) == 0:
-        return I
+        return DerivedUnit("𝟙", "", [], "𝟙")
 
     base_units = [(k_, v_) for k_, v_ in unit_map.items()]
     base_units2 = [Assoc(k_, v_) for k_, v_ in unit_map.items()]
@@ -212,49 +250,32 @@ def _mul_helper(
     # to add the tokens
 
     if type(self) == BaseUnit:
-        self_tokens = [(self._name, -1 if symbol == "/" else 1)]
+        self_tokens = [(self._name, 1)]
     else:
         self_tokens = self._name_tokens
+
     if type(other) == BaseUnit:
         other_tokens = [(other._name, -1 if symbol == "/" else 1)]
     else:
-        other_tokens = other._name_tokens
+        sign = -1 if symbol == "/" else 1
+        other_tokens = [(name, sign * val) for name, val in other._name_tokens]
 
-    result._name_tokens = self_tokens + other_tokens
+    # The unitary operator is used internally, but should not display in the result.
+    result._name_tokens = [t for t in self_tokens + other_tokens if t[0] != '𝟙']
+
     return result
 
 
-@dataclass
-class Composite:
-    coef: Union[float, int]
-    unit: Union[BaseUnit, DerivedUnit]
-
-    def __mul__(self, other: Union[BaseUnit, DerivedUnit, int, float]) -> 'Composite':
-        if type(other) == BaseUnit or type(other) == DerivedUnit:
-            return Composite(self.coef, self.unit * other)
-        elif type(other) == Composite:
-            return Composite(self.coef * other.coef, self.unit * other.unit)
-        elif type(other) == int or type(other) == float:
-            return Composite(self.coef * other, self.unit)
-        else:
-            raise TypeError("Multiplication must be by a unit or number")
-
-    __rmul__ = __mul__
-
-    def __repr__(self):
-        return f"{self.coef}{self.unit.abbrev}"
-
-
-def _pow(unit: Union[BaseUnit, DerivedUnit], power: int) -> DerivedUnit:
+def _pow(unit: Union[BaseUnit, DerivedUnit, Composite], power: int) -> DerivedUnit:
     """Helper to avoid repeated code in BaseUnit and DerivedUnit."""
     result = DerivedUnit("𝟙", "", [], "𝟙")
 
-    if power > 0:
-        for _ in range(power):
+    for _ in range(abs(power)):
+        if power > 0:
             result = result * unit
-    else:
-        for _ in range(abs(power)):
+        else:
             result = result / unit
+
     return result
 
 
@@ -283,54 +304,3 @@ def _power_text(power: int) -> str:
         new_result += char
 
     return new_result
-
-
-I = DerivedUnit("𝟙", "", [], "𝟙")
-
-# http://www.ebyte.it/library/educards/siunits/TablesOfSiUnitsAndPrefixes.html
-
-# Base units
-kg = BaseUnit(0, "kilogram", "kg", "mass")
-s = BaseUnit(1, "second", "s", "time")
-k = BaseUnit(2, "kelvin", "K", "temperature")
-a = BaseUnit(3, "ampere", "A", "current")
-mol = BaseUnit(4, "mole", "mol", "quantity of substance")
-cd = BaseUnit(5, "candela", "cd", "luminosity")
-m = BaseUnit(6, "meter", "m", "distance")
-
-# Derived
-
-# Unitless  # todo special handling?
-rad = I.rename("radian", "rad", "plane angle")
-sr = I.rename("steradian", "sr", "solid angle")
-hz = (I / s).rename("hertz", "Hz", "frequency")
-
-n = (kg * m * s**-2).rename("newton", "N", "force")
-pa = (n / m**2).rename("pascal", "Pa", "pressure")
-j = (n * m).rename("joule", "J", "energy")
-w = (kg * m**2 * s**-3).rename("watt", "W", "power")
-
-# celsius = k.rename("celsius", "°C", "temperature")  # todo distinguish from kelvin?
-celsius = DerivedUnit("celsius", "°C", [(k, 1)], "temperature")  # todo distinguish from kelvin?
-
-c = (a * s).rename("coulomb", "C", "charge")
-v = (w / a).rename("volt", "V", "potential")
-ohm = (v / a).rename("ohm", "Ω", "resistance")
-siem = (a / v).rename("siemens", "S", "conductance")
-f = (c / v).rename("farad", "F", "capacitance")
-h = (v * s / a).rename("henry", "H", "inductance")
-wb = (j / a).rename("weber", "Wb", "magnetic flux")
-t = (wb / m**2).rename("tesla", "T", "magnetic flux density")
-
-lm = (cd * sr).rename("lumen", "lm", "luminous flux")
-lx = (lm / m**2).rename("lux", "lx", "illuminance")
-dipotry = (m**-2).rename("dioptry", "dioptry", "convergence")
-bq = (s**-1).rename("becquerel", "Bq", "activity")
-gy = (j / kg).rename("gray", "Gy", "absorbed dose")
-sv = (j / kg).rename("sievert", "Sv", "dose equivalent")
-
-kat = (mol / s).rename("katal", "kat", "katalytic acitivty")
-
-# For use in identifying when units match a standard derived unit.
-derived_units = [rad, sr, hz, celsius, c, v, ohm, siem, f, h, wb, t, lm, lx,
-                 dipotry, bq, gy, sv, kat]

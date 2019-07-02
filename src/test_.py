@@ -1,6 +1,6 @@
 # For use with [pytest](https://docs.pytest.org/)
 
-from . import main
+import src as u
 
 # Note that the equality checks here included text descriptions,
 # but equality for DerivedUnit only checks the units.
@@ -8,97 +8,101 @@ from . import main
 
 
 def test_compose_identity():
-    assert main.kg / main.kg == main.I  # Base
-    assert main.m**0 == main.I
-    assert main.j / main.j == main.I  # Derived
-    assert main.n**0 == main.I
+    assert u.kg / u.kg == u.I  # Base
+    assert u.m**0 == u.I
+    assert u.j / u.j == u.I  # Derived
+    assert u.n**0 == u.I
 
 
 def test_mul_base():
-    assert main.kg * main.s == main.DerivedUnit(
+    assert u.kg * u.s == u.DerivedUnit(
         "kilogram · meter",
         "kg·m",
-        [(main.kg, 1), (main.s, 1)],
+        [(u.kg, 1), (u.s, 1)],
         "mass · distance"
     )
 
 
 def test_mul_derived():
-    assert main.ohm * main.f == main.DerivedUnit(
+    assert u.ohm * u.f == u.DerivedUnit(
         "ohm · farad",
         "s",
-        [(main.s, 1)],
+        [(u.s, 1)],
         "resistance · capacitance"
     )
 
 
 def test_mul_derived_base():
-    assert main.pa * main.m**2 == main.n  # the second one here is actually derived due to power...
+    assert u.pa * u.m**2 == u.n  # the second one here is actually derived due to power...
 
 
 def test_mul_base_derived():
-    assert main.a * main.v == main.DerivedUnit(
-        "volt · ampere",
-        "kg·m²·s⁻¹·A",
-        [(main.kg, 1), (main.m, 2), (main.s, -1), (main.a, 1)],
+    assert u.a * u.v == u.DerivedUnit(
+        "ampere·volt",
+        "kg·m²·s⁻³",
+        [(u.kg, 1), (u.m, 2), (u.s, -3)],
         "potential · current"
     )
 
 
 def test_div_base():
-    assert main.a / main.cd**2 == main.DerivedUnit(
+    assert u.a / u.cd**2 == u.DerivedUnit(
         "ampere / candela²",
         "A·cd⁻²",
-        [(main.a, 1), (main.cd, -2)],
+        [(u.a, 1), (u.cd, -2)],
         "current / luminosity"
     )
 
 
 def test_div_derived():
-    assert main.ohm / main.f == main.DerivedUnit(
+    assert u.ohm / u.f == u.DerivedUnit(
         "ohm / farad",
         "kg²·m⁴·s⁻⁷·A⁻⁴",
-        [(main.kg, 2), (main.m, 4), (main.s, -7), (main.a, -4)],
+        [(u.kg, 2), (u.m, 4), (u.s, -7), (u.a, -4)],
         "resistance / capacitance"
     )
 
 
 def test_div_derived_base():
-    assert main.pa * main.m ** 2 == main.n
+    assert u.pa * u.m ** 2 == u.n
 
 
 def test_div_base_derived():
-    assert main.v / main.a == main.DerivedUnit(
+    assert u.v / u.a == u.DerivedUnit(
         "volt / ampere",
         "kg·m²·s⁻³·A⁻²",
-        [(main.kg, 1), (main.m, 2), (main.s, -3), (main.a, -2)],
+        [(u.kg, 1), (u.m, 2), (u.s, -3), (u.a, -2)],
         "potential / current"
     )
 
 
 def test_eq_base_derived():
-    assert main.kg == main.n * main.s**2 / main.m
+    assert u.kg == u.n * u.s**2 / u.m
 
 
 def test_equality():
-    assert main.kg * (main.m / main.s)**2 == main.j
-    assert main.v * main.a == main.w
-    assert main.a * main.ohm == main.v
+    assert u.kg * (u.m / u.s)**2 == u.j
+    assert u.v * u.a == u.w
+    assert u.a * u.ohm == u.v
+
+
+def test_equality_mixed():
+    assert 3 * u.w == 6 * u.v * 0.5 * u.a == 3 * u.kg * u.m**2 / u.s**3
 
 
 def test_composite_base():
-    assert (main.kg * 2) * (3 * main.s) == main.Composite(6, main.kg * main.s)
+    assert (u.kg * 2) * (3 * u.s) == u.Composite(6, u.kg * u.s)
 
 
 def test_composite_derived():
-    assert (main.v * 2) * (3 * main.j) == main.Composite(
-        3.6, main.kg**2 * main.m**4 * main.s**-5 / main.a
+    assert (u.v * 2) * (3 * u.j) == u.Composite(
+        6, u.kg**2 * u.m**4 * u.s**-5 / u.a
     )
 
 
 def test_composite_derived_base():
-    assert (main.v * -4) * (2.0 * main.a) == main.Composite(
-        -8., main.kg * main.m**2 * main.s**-3
+    assert (u.v * -4) * (2.0 * u.a) == u.Composite(
+        -8., u.kg * u.m**2 * u.s**-3
     )
 
 
