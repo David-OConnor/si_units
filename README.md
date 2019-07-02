@@ -15,6 +15,12 @@ You can perform normal multiplication, division, and power operations on units
 provided by this lib, and between them and `int`s and `floats`, and check equality,
 based on the resulting combination of base units.
 
+## Install
+```bash
+pip install siunits
+```
+In Linux, you may need to use something like `pip3 install siunits`, or `python3.7 -m pip install siunits`.
+
 ## Examples
 
 A base unit:
