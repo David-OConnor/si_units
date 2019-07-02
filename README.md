@@ -1,6 +1,6 @@
-[![image](https://img.shields.io/pypi/v/si-units.svg)](https://pypi.org/project/si-units/)
-[![image](https://img.shields.io/pypi/l/si-units.svg)](https://pypi.org/project/si-units/)
-[![image](https://img.shields.io/pypi/pyversions/si-units.svg)](https://pypi.org/project/si-units/)
+[![image](https://img.shields.io/pypi/v/si_units.svg)](https://pypi.org/project/si_units/)
+[![image](https://img.shields.io/pypi/l/si_units.svg)](https://pypi.org/project/si_units/)
+[![image](https://img.shields.io/pypi/pyversions/si_units.svg)](https://pypi.org/project/si_units/)
 
 # SI Units
 
