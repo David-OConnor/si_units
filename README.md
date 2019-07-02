@@ -1,6 +1,6 @@
-[![image](https://img.shields.io/pypi/v/si_units.svg)](https://pypi.org/project/si_units/)
-[![image](https://img.shields.io/pypi/l/si_units.svg)](https://pypi.org/project/si_units/)
-[![image](https://img.shields.io/pypi/pyversions/si_units.svg)](https://pypi.org/project/si_units/)
+[![image](https://img.shields.io/pypi/v/siunits.svg)](https://pypi.org/project/siunits/)
+[![image](https://img.shields.io/pypi/l/siunits.svg)](https://pypi.org/project/siunits/)
+[![image](https://img.shields.io/pypi/pyversions/siunits.svg)](https://pypi.org/project/siunits/)
 
 # SI Units
 
@@ -19,7 +19,7 @@ based on the resulting combination of base units.
 
 A base unit:
 ```python
-import si_units as u
+import siunits as u
 
 u.kg
 >>> kilogram (kg), mass

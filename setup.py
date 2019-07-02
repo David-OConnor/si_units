@@ -6,8 +6,8 @@ with open('README.md') as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="si_units",
-    version="0.0.2",
+    name="siunits",
+    version="0.0.3",
     author="David O'Connor",
     author_email="david.alan.oconnor@gmail.com",
     description="Perform operations on SI units",
