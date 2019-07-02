@@ -1,19 +1,18 @@
 import setuptools
 
-with open('README.rst') as f:
-    readme = f.read()
+with open('README.md') as fh:
+    long_description = fh.read()
 
 setuptools.setup(
-    name="siunits",
+    name="si-units",
     version="0.0.1",
-
     author="David O'Connor",
     author_email="david.alan.oconnor@gmail.com",
-    url='https://github.com/David-OConnor/si_units',
     description="Perform operations on SI units",
-    long_description=readme,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url='https://github.com/David-OConnor/si_units',
     license="MIT",
-    keywords="SI, units",
     packages=setuptools.find_packages(),
     python_requires=">=3.7",
     classifiers=[
@@ -22,4 +21,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ],
+    keywords="SI, units, dimensional analysis",
 )

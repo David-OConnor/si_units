@@ -1,5 +1,4 @@
-SI Units
-========
+# SI Units
 
 This is a library used to symbolically manipulate SI units. It comprises a `BaseUnit` type,
 used for base SI units like `kilogram`, `meter` etc, a `DerivedUnit` type,
@@ -12,8 +11,8 @@ You can perform normal multiplication, division, and power operations on units
 provided by this lib, and between them and `int`s and `floats`, and check equality,
 based on the resulting combination of base units.
 
-Examples
---------
+## Examples
+
 A base unit:
 ```python
 import si_units as u
@@ -56,19 +55,19 @@ u.w == u.v * u.a == u.kg * u.m**2 / u.s**3
 >>> True
 ```
 
-Todo
-----
+## Todo
+
 - Infer composite types that match a given custom (eg multiplied) unit
 - Apply arithmetic to quantities as well (eg `energy`, `work` etc), and display them
 
 
-Scope
------
+## Scope
+
 This project doesn't aim to provide conversions with other unit systems, like
 `cgs` and `imperial`, nor does it provide physical constants. For these
 tasks, try [scipy.constants](https://docs.scipy.org/doc/scipy/reference/constants.html).
 
-Why add another unit library?
------------------------------
+## Why add another unit library?
+
 The clean symbolic manipulation this library provides doesn't appear to exist
 in any existing one.
