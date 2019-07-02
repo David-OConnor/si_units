@@ -1,3 +1,7 @@
+[![image](https://img.shields.io/pypi/v/si-units.svg)](https://pypi.org/project/si-units/)
+[![image](https://img.shields.io/pypi/l/si-units.svg)](https://pypi.org/project/si-units/)
+[![image](https://img.shields.io/pypi/pyversions/si-units.svg)](https://pypi.org/project/si-units/)
+
 # SI Units
 
 This is a library used to symbolically manipulate SI units. It comprises a `BaseUnit` type,

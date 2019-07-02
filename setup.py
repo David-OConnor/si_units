@@ -1,11 +1,13 @@
+# https://packaging.python.org/tutorials/packaging-projects/
+
 import setuptools
 
 with open('README.md') as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="si-units",
-    version="0.0.1",
+    name="si_units",
+    version="0.0.2",
     author="David O'Connor",
     author_email="david.alan.oconnor@gmail.com",
     description="Perform operations on SI units",
