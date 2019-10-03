@@ -15,3 +15,5 @@ Thumbs.db
 *.iws
 workspace.xml
 
+__pypackages__/
+
