@@ -1,0 +1,109 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Unknown </title></head><body>
+<p><a href="https://pypi.org/project/siunits/"><img alt="image" src="https://img.shields.io/pypi/v/siunits.svg" /></a>
+<a href="https://pypi.org/project/siunits/"><img alt="image" src="https://img.shields.io/pypi/l/siunits.svg" /></a>
+<a href="https://pypi.org/project/siunits/"><img alt="image" src="https://img.shields.io/pypi/pyversions/siunits.svg" /></a></p>
+<h1 id="si-units">SI Units</h1>
+<p>This is a library used to symbolically manipulate SI units. It comprises a <code>BaseUnit</code> type,
+used for base SI units like <code>kilogram</code>, <code>meter</code> etc, a <code>DerivedUnit</code> type,
+for units derived from them, and a <code>Composite</code> type, for when numerical coefficients
+are included. Python version 3.7 or greater is required. There are no dependencies.</p>
+<p>This library is useful for dimensional analysis. It relies on the concept that
+SI units are all composed of varying exponents of 7 base units. We can think 
+of all other units as linear combinations of base units.</p>
+<p>You can perform normal multiplication, division, and power operations on units
+provided by this lib, and between them and <code>int</code>s and <code>floats</code>. You can check equality,
+based on the resulting combination of base units.</p>
+<h2 id="install">Install</h2>
+<p><code>bash
+pip install siunits</code>
+In Linux, you may need to use something like <code>pip3 install siunits</code>, or <code>python3.7 -m pip install siunits</code>.</p>
+<h2 id="examples">Examples</h2>
+<p>A base unit:
+```python
+import siunits as u</p>
+<p>u.kg</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>kilogram (kg), mass
+```</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>A derived unit:
+```python
+u.v</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>volt (V), [kg: 1, m: 2, s: -3, A: -1]
+```</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>Multiplication:
+```python
+u.kg * u.s</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>kilogram·second (kg·s), [kg: 1, s: 1]
+```</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>Division:
+```python
+u.j / u.m**2</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>joule / meter² (kg·s⁻²), [kg: 1, s: -2]</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>u.s<strong>2 / u.kg</strong>3</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>second²·kilogram⁻³ (s²·kg⁻³), [s: 2, kg: -3]</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>```</p>
+<p>With numerical coefficients:
+```python
+2*u.a<strong>2 * 3*u.v</strong>2</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>6kg²·m⁴·s⁻⁶
+```</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>Equality testing is based on composition of base units:
+```python
+u.w == u.v * u.a == u.kg * u.m<strong>2 / u.s</strong>3</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>True
+```</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<h2 id="todo">Todo</h2>
+<ul>
+<li>Infer composite types that match a given custom (eg multiplied) unit</li>
+<li>Apply arithmetic to quantities as well (eg <code>energy</code>, <code>work</code> etc), and display them</li>
+<li>Addition and subtraction</li>
+</ul>
+<h2 id="scope">Scope</h2>
+<p>This project doesn't aim to provide conversions with other unit systems, like
+<code>cgs</code> and <code>imperial</code>, nor does it provide physical constants. For these
+tasks, try <a href="https://docs.scipy.org/doc/scipy/reference/constants.html">scipy.constants</a>.</p>
+<h2 id="why-add-another-unit-library">Why add another unit library?</h2>
+<p>The clean symbolic manipulation this library provides doesn't appear to exist
+in any existing one.</p>
+</body></html>

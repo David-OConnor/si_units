@@ -47,9 +47,25 @@ sv = (j / kg).rename("sievert", "Sv", "dose equivalent")
 
 kat = (mol / s).rename("katal", "kat", "katalytic acitivty")
 
+
+# Physical constants, defined by their units
+hbar = a**2 * s**4 / m**3 / kg
+ħ = hbar
+
+epsilon_0 = a**2 * s**4 / m**3 / kg
+ϵ_0 = epsilon_0
+
+mu_0 = m * kg / s**2 / a**2
+μ_0 = mu_0
+
+
 base_units = [kg, s, k, a, mol,cd, m]
 
 derived_units = [rad, sr, hz, celsius, c, v, ohm, siem, f, h, wb, t, lm, lx,
                  dipotry, bq, gy, sv, kat]
 
-units = base_units + derived_units
+constants = [hbar, epsilon_0, mu_0]
+
+units = base_units + derived_units + constants
+
+

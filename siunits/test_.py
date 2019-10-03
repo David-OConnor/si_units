@@ -84,6 +84,7 @@ def test_equality():
     assert u.kg * (u.m / u.s)**2 == u.j
     assert u.v * u.a == u.w
     assert u.a * u.ohm == u.v
+    u.v / u.m == u.n / u.c
 
 
 def test_equality_mixed():

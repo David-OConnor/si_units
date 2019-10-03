@@ -7,12 +7,14 @@
 This is a library used to symbolically manipulate SI units. It comprises a `BaseUnit` type,
 used for base SI units like `kilogram`, `meter` etc, a `DerivedUnit` type,
 for units derived from them, and a `Composite` type, for when numerical coefficients
-are included.
+are included. Python version 3.7 or greater is required. There are no dependencies.
 
-This library is useful for dimensional analysis. Python version 3.7 or greater is required. There are no dependencies.
+This library is useful for dimensional analysis. It relies on the concept that
+SI units are all composed of varying exponents of 7 base units. We can think 
+of all other units as linear combinations of base units.
 
 You can perform normal multiplication, division, and power operations on units
-provided by this lib, and between them and `int`s and `floats`, and check equality,
+provided by this lib, and between them and `int`s and `floats`. You can check equality,
 based on the resulting combination of base units.
 
 ## Install
@@ -69,7 +71,7 @@ u.w == u.v * u.a == u.kg * u.m**2 / u.s**3
 
 - Infer composite types that match a given custom (eg multiplied) unit
 - Apply arithmetic to quantities as well (eg `energy`, `work` etc), and display them
-
+- Addition and subtraction
 
 ## Scope
 

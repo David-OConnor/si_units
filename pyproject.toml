@@ -1,0 +1,20 @@
+[tool.pyflow]
+name = "siunits"
+py_version = "3.7"
+version = "0.0.6"
+author = "David O'Connor"
+author_email = "david.alan.oconnor@gmail.com"
+description = "Perform operations on SI units"
+homepage = "https://github.com/David-OConnor/si_units"
+repository = "https://github.com/David-OConnor/si_units"
+license = "MIT"
+keywords = ["si", "units", "dimensional analysis"]
+classifiers=[
+        "Programming Language :: Python :: 3 :: Only",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Topic :: Scientific/Engineering",
+]
+python_requires = ">=3.7"
+
+package_url = "https://upload.pypi.org/legacy/"

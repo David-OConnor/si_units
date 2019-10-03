@@ -49,8 +49,7 @@ class BaseUnit:
         return hash((self.id,))
 
     def __repr__(self):
-        # return f"{self._name} ({self.abbrev}), {self.quantity}"
-        return f"{self._name} ({self.abbrev})"
+        return f"{self._name} ({self.abbrev}), {self.quantity}"
 
     
 @dataclass
@@ -134,7 +133,7 @@ class DerivedUnit:
         return _to_unit_map(self.base_units) == _to_unit_map(other.base_units)
 
     def __repr__(self):
-        return f"{self.name()} ({self.abbrev}), {self.base_units}"
+        return f"{self.name()} ({self.abbrev}), {sorted(self.base_units, key=lambda a: a.unit.id)}"
 
 
 def _to_unit_map(units: List[Assoc]) -> Dict[BaseUnit, int]:
@@ -165,6 +164,7 @@ def _handle_description(units: List[Union[BaseUnit, DerivedUnit]]) -> Tuple[str,
 
 @dataclass
 class Composite:
+    # todo: Combine with DerivedUnit ?
     coef: Union[float, int]
     unit: Union[BaseUnit, DerivedUnit]
 
@@ -180,7 +180,7 @@ class Composite:
 
     __rmul__ = __mul__
 
-    def __truediv__(self, other):
+    def __truediv__(self, other) -> 'Composite':
         if type(other) == BaseUnit or type(other) == DerivedUnit:
             return Composite(self.coef, self.unit / other)
         elif type(other) == Composite:
@@ -195,6 +195,19 @@ class Composite:
 
     def __pow__(self, power: int):
         return _pow(self, power)
+
+    # def __add__(self, other):  # todo type annotate
+    #     if type(other) == BaseUnit or type(other) == DerivedUnit:
+    #         return [Composite(self.coef, self.unit / other)]
+    #     elif type(other) == Composite:
+    #         return Composite(self.coef / other.coef, self.unit / other.unit)
+    #     elif type(other) == int or type(other) == float:
+    #         return Composite(self.coef / other, self.unit)
+    #     else:
+    #         raise TypeError("Multiplication must be by a unit or number")
+    #
+    # def __radd__(self, other: 'Composite'):
+    #     pass
 
     def __repr__(self):
         return f"{self.coef}{self.unit.abbrev}"
