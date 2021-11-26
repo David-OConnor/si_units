@@ -12,7 +12,7 @@ jobs:
       - run: bandit --recursive --skip B101 .  # B101 is assert statements
       - run: black --check . || true
       - run: codespell  # --ignore-words-list="" --skip="*.css,*.js,*.lock"
-      - run: flake8 . --count --ignore=B015,E231,E741,F401,F403,F901,W291,W293,W391
+      - run: flake8 . --count --ignore=B015,E231,E226,E741,F401,F403,F901,W291,W293,W391
                       --max-complexity=11 --max-line-length=115 --show-source --statistics
       - run: isort --check-only --profile black . || true
       - run: pip install --editable . || true
