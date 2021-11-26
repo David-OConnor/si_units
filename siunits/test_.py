@@ -1,6 +1,5 @@
 # For use with [pytest](https://docs.pytest.org/)
 
-# import src as u
 import siunits as u
 
 # Note that the equality checks here included text descriptions,
