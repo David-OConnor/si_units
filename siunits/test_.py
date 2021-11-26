@@ -1,7 +1,7 @@
 # For use with [pytest](https://docs.pytest.org/)
 
 # import src as u
-import .unit as u
+from . import unit as u
 
 # Note that the equality checks here included text descriptions,
 # but equality for DerivedUnit only checks the units.
