@@ -308,7 +308,7 @@ def _power_text(power: int) -> str:
     }
 
     result = "".join(chars[char] for char in str(power))
-    # Ommit first power
+    # Omit first power
     new_result = ""  # Don't modify result in place
     for i, char in enumerate(result):
         if char == "¹":
