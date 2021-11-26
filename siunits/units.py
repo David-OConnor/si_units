@@ -62,7 +62,7 @@ mu_0 = m * kg / s**2 / a**2
 base_units = [kg, s, k, a, mol,cd, m]
 
 derived_units = [rad, sr, hz, celsius, c, v, ohm, siem, f, h, wb, t, lm, lx,
-                 dipotry, bq, gy, sv, kat]
+                 dipotry, bq, gy, sv, kat, n, pa, j, w]
 
 constants = [hbar, epsilon_0, mu_0]
 
