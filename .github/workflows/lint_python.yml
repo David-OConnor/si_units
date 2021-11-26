@@ -15,7 +15,7 @@ jobs:
       - run: flake8 . --count --ignore=B015,E231,E226,E741,F401,F403,F901,W291,W293,W391
                       --max-complexity=11 --max-line-length=115 --show-source --statistics
       - run: isort --check-only --profile black . || true
-      - run: pip install --editable . || true
+      - run: pip install --editable . || pip install .  # --editable fails
       - run: mkdir --parents --verbose .mypy_cache
       - run: mypy --ignore-missing-imports --install-types --non-interactive . || true
       - run: pytest . || true
