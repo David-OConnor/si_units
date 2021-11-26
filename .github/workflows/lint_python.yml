@@ -18,7 +18,7 @@ jobs:
       - run: pip install --editable . || pip install .  # --editable fails
       - run: mkdir --parents --verbose .mypy_cache
       - run: mypy --ignore-missing-imports --install-types --non-interactive . || true
-      - run: pytest . || true
-      - run: pytest --doctest-modules . || true
+      - run: pytest siunits || true
+      - run: pytest --doctest-modules siunits || true
       - run: shopt -s globstar && pyupgrade --py36-plus **/*.py
       - run: safety check
