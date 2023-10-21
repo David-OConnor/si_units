@@ -13,7 +13,7 @@ This library is useful for dimensional analysis. It relies on the concept that
 SI units are all composed of varying exponents of 7 base units. We can think 
 of all other units as linear combinations of base units.
 
-You can perform normal multiplication, division, and power operations on units
+You can perform normal multiplication, division, addition, subtraction and power operations on units
 provided by this lib, and between them and `int`s and `floats`. You can check equality,
 based on the resulting combination of base units.
 
@@ -71,7 +71,6 @@ u.w == u.v * u.a == u.kg * u.m**2 / u.s**3
 
 - Infer composite types that match a given custom (eg multiplied) unit
 - Apply arithmetic to quantities as well (eg `energy`, `work` etc), and display them
-- Addition and subtraction
 
 ## Scope
 
